@@ -59,10 +59,10 @@ bool DoTheImportThingIfcPP(const std::string &pFile){
 		if (ifc_storey)
 		{
 			// access attributes:
-			// if (ifc_storey->m_GlobalId)
-			// {
-			// 	std::wcout << L"found IfcBuildingStorey entity with GUID: " << ifc_storey->m_GlobalId->m_value << std::endl;
-			// }
+			if (ifc_storey->m_GlobalId)
+			{
+				std::wcout << L"found IfcBuildingStorey entity with GUID: " << ifc_storey->m_GlobalId->m_value << std::endl;
+			}
 		}
 	}
 	std::cout<<"Finish import from ifc++ "<<endl;
