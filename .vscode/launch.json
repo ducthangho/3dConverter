@@ -1,0 +1,41 @@
+{
+    // Use IntelliSense to learn about possible attributes.
+    // Hover to view descriptions of existing attributes.
+    // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
+    "version": "0.2.0",
+    "configurations": [                
+        {
+            "name": "(gdb) Bash on Windows Launch",
+            "type": "cppdbg",
+            "request": "launch",
+            "program": "/mnt/c/Users/mylaptop/Google Drive/3DProjects/out/build/WSL-Release/3dConverter",
+            "args": ["/home/ducthangho/models/AC14-FZK-Haus.ifc"],
+            "stopAtEntry": true,
+            // NOTE: you have to specify explicitly the location of files
+            "cwd": "/mnt/c/Users/mylaptop/Google Drive/3DProjects/out/build/WSL-Release",
+            "environment": [],
+            "externalConsole": true,
+            "windows": {
+                "MIMode": "gdb",
+                "setupCommands": [
+                    {
+                        "description": "Enable pretty-printing for gdb",
+                        "text": "-enable-pretty-printing",
+                        "ignoreFailures": true
+                    }
+                ]
+            },
+            "pipeTransport": {
+                "debuggerPath": "/usr/bin/gdb",
+                "pipeProgram": "bash",
+                "pipeArgs": ["-c"],
+                "pipeCwd": ""
+            },
+            "sourceFileMap": {
+                "/mnt/c": "c:\\",
+                "/usr": "C:/Users/mylaptop/AppData/Local/Packages/CanonicalGroupLimited.Ubuntu16.04onWindows_79rhkp1fndgsc/LocalState/rootfs/usr"
+            }
+        }
+    ]
+}
+// C:/Windows/WinSxS/amd64_microsoft-windows-lxss-bash_31bf3856ad364e35_10.0.18362.239_none_95822ecb4e202f44/bash.exe
