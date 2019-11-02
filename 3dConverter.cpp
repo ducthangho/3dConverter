@@ -3,17 +3,25 @@
 
 #include "3dConverter.h"
 #include <assimp/Importer.hpp>  // C++ importer interface
+#include <assimp/Exporter.hpp>  // C++ exporter interface
 #include <assimp/scene.h>		// Output data structure
 #include <assimp/postprocess.h> // Post processing flags
 #include <clipp.h>
 #include <assimp/DefaultLogger.hpp>
 #include <plf_nanotimer.h>
 
+#ifndef ASSIMP_BUILD_NO_EXPORT
+#	include <assimp/Exporter.hpp>
+#endif
+
 #include <ifcpp/IFC4/include/IfcBuildingStorey.h>
 #include <ifcpp/IFC4/include/IfcGloballyUniqueId.h>
 #include <ifcpp/model/BuildingModel.h>
 #include <ifcpp/reader/ReaderSTEP.h>
 
+#ifndef SIZE_MAX
+#	define SIZE_MAX (std::numeric_limits<size_t>::max())
+#endif
 
 using namespace std;
 
@@ -56,8 +64,7 @@ bool DoTheImportThingIfcPP(const std::string &pFile){
 		
 		// check for certain type of the entity:
 		shared_ptr<IfcBuildingStorey> ifc_storey = dynamic_pointer_cast<IfcBuildingStorey>(entity);
-		if (ifc_storey)
-		{
+		if (ifc_storey)		{
 			// access attributes:
 			if (ifc_storey->m_GlobalId)
 			{
@@ -66,6 +73,53 @@ bool DoTheImportThingIfcPP(const std::string &pFile){
 		}
 	}
 	std::cout<<"Finish import from ifc++ "<<endl;
+}
+
+// -----------------------------------------------------------------------------------
+size_t GetMatchingFormat(const std::string& outf,bool byext=false) 
+{
+	for(size_t i = 0, end = globalExporter->GetExportFormatCount(); i < end; ++i) {
+		const aiExportFormatDesc* const e =  globalExporter->GetExportFormatDescription(i);
+		if (outf == (byext ? e->fileExtension : e->id)) {
+			return i;
+		}
+	}
+	return SIZE_MAX;
+}
+
+
+bool DoConvertThing(const std::string &in,const std::string &filename){	
+	const std::string::size_type s = filename.find_last_of('.');
+    string path,outext;    
+		
+	if (s != std::string::npos) {
+		outext = filename.substr(s+1);
+		path = filename.substr(0,s);
+	}
+
+
+    cout << "\tExport path: " << path << endl;
+	cout << "Format : "<<outext <<endl;
+	size_t outfi = GetMatchingFormat(outext);
+	printf("outfi = %d\n",outfi);
+	const aiExportFormatDesc* const e =  globalExporter->GetExportFormatDescription(outfi);
+	printf("assimp export: select file format: \'%s\' (%s)\n",e->id,e->description);
+	
+	ImportData import;
+	const aiScene* scene = ImportModel(import,in);
+	if (!scene) {
+		return false;
+	}
+
+	// derive the final file name
+	path += "."+outext;
+
+	// and call the export routine
+	if(!ExportModel(scene, import, path,e->id)) {
+		return false;
+	}
+	printf("assimp export: wrote output file: %s\n",path.c_str());
+    return true;
 }
 
 bool DoTheImportThing(const std::string &pFile)
@@ -118,6 +172,18 @@ int main(int argc, char *argv[])
 	bool rec = false, utf16 = false;
 	std::vector<int> tools;
 	string infile = "", fmt = "gltf";
+	string outfile = "";
+	// construct global importer and exporter instances
+	Assimp::Importer imp;
+	imp.SetPropertyBool("GLOB_MEASURE_TIME",true);
+	globalImporter = &imp;
+
+
+#ifndef ASSIMP_BUILD_NO_EXPORT
+	Assimp::Exporter exp;
+	globalExporter = &exp;
+#endif
+
 
 	auto tool = (option("-tool", "--tool") & value("library", tools)).doc("0 = assimp(default) ;  1 = ifc++  ;   2= magnum");
 
@@ -128,11 +194,24 @@ int main(int argc, char *argv[])
 	if (!parse(argc, argv, cli))
 		cout << make_man_page(cli, argv[0]);
 	// ...
+		
+	std::string::size_type s = infile.find_last_of('.');	
+	if (s == std::string::npos) {
+		s = infile.length();
+		
+	}	
+
+	outfile = infile.substr(0,s);
+	
+	outfile += ".gltf2";
+	printf("Export to gltf file:  %s   %s\n",outfile.c_str(),infile.c_str());
+
 
 	if (tools.size() == 0)
 	{
 		// DoTheImportThing(infile);
-		DoTheImportThingIfcPP(infile);
+		DoConvertThing(infile,outfile);
+		//DoTheImportThingIfcPP(infile);
 	}
 	else
 	{
@@ -143,7 +222,8 @@ int main(int argc, char *argv[])
 			if (tool == 0)
 			{
 				// DoTheImportThing(infile);
-				DoTheImportThingIfcPP(infile);
+				DoConvertThing(infile,outfile);
+				//DoTheImportThingIfcPP(infile);
 			}
 		}
 	}

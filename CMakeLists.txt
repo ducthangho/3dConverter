@@ -16,7 +16,7 @@ project (3dConverter VERSION 1.0 LANGUAGES CXX)
 list(APPEND CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake)
 
 # Add source to this project's executable.
-add_executable (3dConverter "3dConverter.cpp" "myIoStream.cpp")
+add_executable (3dConverter "3dConverter.cpp" "myIoStream.cpp" "assimpConverter.cpp")
 
 find_package(assimp CONFIG REQUIRED)
 #find_package(Magnum CONFIG REQUIRED)
@@ -24,6 +24,7 @@ find_package(assimp CONFIG REQUIRED)
 #    target_link_libraries(main PRIVATE Magnum::Magnum Magnum::GLContext Magnum::Application Magnum::${_component})
 find_package(clipp CONFIG REQUIRED)
 find_package(IFCPP CONFIG REQUIRED)
+find_package(ZLIB REQUIRED)
     
 #include_directories(${ASSIMP_INCLUDE_DIRS})
 target_include_directories(3dConverter 
@@ -43,6 +44,7 @@ target_link_libraries(3dConverter
 		assimp::assimp
 		clipp::clipp
 		IFCPP::IfcPlusPlus
+		ZLIB::ZLIB
 )
 
 
