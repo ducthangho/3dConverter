@@ -9,6 +9,10 @@
 #include <clipp.h>
 #include <assimp/DefaultLogger.hpp>
 #include <plf_nanotimer.h>
+#include <Magnum/Trade/AbstractImporter.h>
+#include <Corrade/PluginManager/Manager.h>
+#include <MagnumPlugins/AnySceneImporter/AnySceneImporter.h>
+#include <Corrade/Utility/Directory.h>
 
 #ifndef ASSIMP_BUILD_NO_EXPORT
 #	include <assimp/Exporter.hpp>
@@ -85,6 +89,36 @@ size_t GetMatchingFormat(const std::string& outf,bool byext=false)
 		}
 	}
 	return SIZE_MAX;
+}
+
+bool DoConvertThingMagnum(const std::string &in,const std::string &filename){	
+	const std::string::size_type s = filename.find_last_of('.');
+    string path,outext;    
+		
+	if (s != std::string::npos) {
+		outext = filename.substr(s+1);
+		path = filename.substr(0,s);
+	}
+
+
+    cout << "\tExport path: " << path << endl;
+	cout << "Format : "<<outext <<endl;
+
+	std::vector<std::string> pluginSearchPath = Corrade::PluginManager::AbstractPlugin::pluginSearchPaths();
+	std::cout<<"Relative search path is "<<Corrade::Utility::Directory::executableLocation()<<endl;
+	std::cout<<"Search folders: "<<endl;
+	for (auto s : pluginSearchPath){
+		std::cout<<s<<endl;
+	}
+
+	Corrade::PluginManager::Manager<Magnum::Trade::AbstractImporter> manager;
+    Corrade::Containers::Pointer<Magnum::Trade::AbstractImporter> importer =
+        manager.loadAndInstantiate("AssimpImporter");
+    if(!importer || !importer->openFile(in) ) {
+		cout << "Cannot load the AssImpImporter plugin"<<endl;
+		return false;
+	}	
+
 }
 
 
@@ -211,6 +245,7 @@ int main(int argc, char *argv[])
 	{
 		// DoTheImportThing(infile);
 		DoConvertThing(infile,outfile);
+		// DoConvertThingMagnum(infile,outfile);
 		//DoTheImportThingIfcPP(infile);
 	}
 	else
@@ -223,6 +258,7 @@ int main(int argc, char *argv[])
 			{
 				// DoTheImportThing(infile);
 				DoConvertThing(infile,outfile);
+				// DoConvertThingMagnum(infile,outfile);
 				//DoTheImportThingIfcPP(infile);
 			}
 		}
