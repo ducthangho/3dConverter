@@ -48,6 +48,12 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #define AI_IFCASSIMPIMPORTER_H_INC
 
 #include <assimp/BaseImporter.h>
+#include <assimp/code/Importer/IFC/IFCUtil.h>
+#include <ifcpp/reader/ReaderSTEP.h>
+#include "ifcpp/IFC4/include/IfcRepresentationItem.h"
+#include "ifcpp/IFC4/include/IfcSurfaceStyle.h"
+#include <ifcpp/geometry/Carve/GeometryConverter.h>
+#include <ifcpp/geometry/GeometrySettings.h>
 
 struct aiMesh;
 struct aiNode;
@@ -62,6 +68,7 @@ struct aiCamera;
 
 #ifndef ASSIMP_BUILD_NO_IFCASSIMPIMPORTER
 
+using namespace std;
 namespace Assimp    {
 
 // ---------------------------------------------------------------------------------
@@ -74,6 +81,11 @@ private:
     bool compressed;
 
 public:
+
+    IfcAssImpImporter():m_step_reader(new ReaderSTEP()), m_ifc_model(new BuildingModel()),geometry_converter(new GeometryConverter( m_ifc_model )) {
+
+    }
+
     virtual bool CanRead(
         const std::string& pFile,
         IOSystem* pIOHandler,
@@ -97,7 +109,57 @@ public:
     void ReadBinaryTexture(IOStream * stream, aiTexture* tex);
     void ReadBinaryLight( IOStream * stream, aiLight* l );
     void ReadBinaryCamera( IOStream * stream, aiCamera* cam );
+    shared_ptr<GeometryConverter>	getGeometryConverter()	{ return geometry_converter; }
+
+protected:
+
+    // --------------------
+    // const aiImporterDesc* GetInfo () const;
+
+    // --------------------
+    void SetupProperties(const Importer* pImp);
+
+    // --------------------
+    // void InternReadFile( const std::string& pFile,
+    //     aiScene* pScene,
+    //     IOSystem* pIOHandler
+    // );
+
+private:
+
+    shared_ptr<BuildingModel> m_ifc_model;
+	shared_ptr<ReaderSTEP> m_step_reader;
+    shared_ptr<GeometryConverter> geometry_converter;
+public:
+
+
+    // loader settings, publicly accessible via their corresponding AI_CONFIG constants
+    struct Settings
+    {
+        Settings()
+            : skipSpaceRepresentations()
+            , useCustomTriangulation()
+            , skipAnnotations()
+            , conicSamplingAngle(10.f)
+			, cylindricalTessellation(32)
+        {}
+
+
+        bool skipSpaceRepresentations;
+        bool useCustomTriangulation;
+        bool skipAnnotations;
+        float conicSamplingAngle;
+		int cylindricalTessellation;
+    };
+
+
+private:
+
+    Settings settings;
+
 };
+
+
 
 } // end of namespace Assimp
 

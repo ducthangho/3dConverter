@@ -60,6 +60,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #endif
 
 #include "IfcAssImpImporter.h"
+#include "Convert2AssImp.h"
 // #include "../STEPParser/STEPFileReader.h"
 
 // #include "IFCUtil.h"
@@ -73,6 +74,9 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <ifcpp/IFC4/include/IfcGloballyUniqueId.h>
 #include <ifcpp/model/BuildingModel.h>
 #include <ifcpp/reader/ReaderSTEP.h>
+#include <ifcpp/geometry/Carve/GeometryConverter.h>
+#include <flatbuffers/flatbuffers.h>
+// #include <ifcpp/geometry/OCC/GeometryConverterOCC.h>
 
 #ifndef SIZE_MAX
 #	define SIZE_MAX (std::numeric_limits<size_t>::max())
@@ -113,7 +117,7 @@ using namespace Assimp;
 // void SetCoordinateSpace(ConversionData& conv);
 // void ProcessSpatialStructures(ConversionData& conv);
 // void MakeTreeRelative(ConversionData& conv);
-// void ConvertUnit(const ::Assimp::STEP::EXPRESS::DataType& dt,ConversionData& conv);
+// void ConvertUnit(const shared_ptr<ReaderSTEP>& readerStep,ConversionData& conv);
 
 // } // anon
 
@@ -166,6 +170,7 @@ static const aiImporterDesc desc = {
 // Returns whether the class can handle the format of the given file.
 bool IfcAssImpImporter::CanRead( const std::string& pFile, IOSystem* pIOHandler, bool checkSig) const
 {
+    ASSIMP_LOG_INFO("My own CanRead");
     const std::string& extension = GetExtension(pFile);
     if (extension == "ifc" || extension == "ifczip" ) {
         return true;
@@ -187,31 +192,38 @@ const aiImporterDesc* IfcAssImpImporter::GetInfo () const
     return &desc;
 }
 
-// // ------------------------------------------------------------------------------------------------
-// // Setup configuration properties for the loader
-// void IfcAssImpImporter::SetupProperties(const Importer* pImp)
-// {
-//     settings.skipSpaceRepresentations = pImp->GetPropertyBool(AI_CONFIG_IMPORT_IFC_SKIP_SPACE_REPRESENTATIONS,true);
-//     settings.useCustomTriangulation = pImp->GetPropertyBool(AI_CONFIG_IMPORT_IFC_CUSTOM_TRIANGULATION,true);
-//     settings.conicSamplingAngle = std::min(std::max((float) pImp->GetPropertyFloat(AI_CONFIG_IMPORT_IFC_SMOOTHING_ANGLE, AI_IMPORT_IFC_DEFAULT_SMOOTHING_ANGLE), 5.0f), 120.0f);
-// 	settings.cylindricalTessellation = std::min(std::max(pImp->GetPropertyInteger(AI_CONFIG_IMPORT_IFC_CYLINDRICAL_TESSELLATION, AI_IMPORT_IFC_DEFAULT_CYLINDRICAL_TESSELLATION), 3), 180);
-// 	settings.skipAnnotations = true;
-// }
-
+// ------------------------------------------------------------------------------------------------
+// Setup configuration properties for the loader
+void IfcAssImpImporter::SetupProperties(const Importer* pImp)
+{
+    settings.skipSpaceRepresentations = pImp->GetPropertyBool(AI_CONFIG_IMPORT_IFC_SKIP_SPACE_REPRESENTATIONS,true);
+    settings.useCustomTriangulation = pImp->GetPropertyBool(AI_CONFIG_IMPORT_IFC_CUSTOM_TRIANGULATION,true);
+    settings.conicSamplingAngle = std::min(std::max((float) pImp->GetPropertyFloat(AI_CONFIG_IMPORT_IFC_SMOOTHING_ANGLE, AI_IMPORT_IFC_DEFAULT_SMOOTHING_ANGLE), 5.0f), 120.0f);
+	settings.cylindricalTessellation = std::min(std::max(pImp->GetPropertyInteger(AI_CONFIG_IMPORT_IFC_CYLINDRICAL_TESSELLATION, AI_IMPORT_IFC_DEFAULT_CYLINDRICAL_TESSELLATION), 3), 180);
+	settings.skipAnnotations = true;
+}
 
 // ------------------------------------------------------------------------------------------------
 // Imports the given file into the given scene structure.
 void IfcAssImpImporter::InternReadFile( const std::string& pFile, aiScene* pScene, IOSystem* pIOHandler)
 {
-    // create an IFC model and a reader for IFC files in STEP format:
-	shared_ptr<BuildingModel> ifc_model(new BuildingModel());
-	shared_ptr<ReaderSTEP> step_reader(new ReaderSTEP());
-
+    printf("MY CUSTOM IMPORTER\n");
+    // create an IFC model and a reader for IFC files in STEP format:    
+	
+    shared_ptr<GeometryConverter> geometry_converter = getGeometryConverter();
+    geometry_converter->clearMessagesCallback();
+	geometry_converter->resetModel();
+    m_ifc_model->resetIfcModel();
 	// load the model:
-	step_reader->loadModelFromFile( StringToWString(pFile), ifc_model);
+	m_step_reader->loadModelFromFile( StringToWString(pFile), m_ifc_model);        
+    // convert IFC geometric representations into Carve geometry
+	geometry_converter->convertGeometry();    
 
+    ConverterCarve2AssImp conv(m_step_reader, m_ifc_model, pScene,settings, geometry_converter->getGeomSettings());
+    conv.setMessageTarget(geometry_converter.get());
+    // conv.convert( geometry_converter->getShapeInputData());
 	// get a map of all loaded IFC entities:
-	const std::map<int, shared_ptr<BuildingEntity> >& map_entities = ifc_model->getMapIfcEntities();
+	const std::map<int, shared_ptr<BuildingEntity> >& map_entities = m_ifc_model->getMapIfcEntities();
 
 	for (auto it : map_entities)
 	{

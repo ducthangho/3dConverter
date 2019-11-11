@@ -1,7 +1,10 @@
 ﻿// 3dConverter.cpp : Defines the entry point for the application.
 //
 
+#define ASSIMP_BUILD_DEBUG
+
 #include "3dConverter.h"
+#include <IfcAssImpImporter.h>
 #include <assimp/Importer.hpp>  // C++ importer interface
 #include <assimp/Exporter.hpp>  // C++ exporter interface
 #include <assimp/scene.h>		// Output data structure
@@ -9,10 +12,10 @@
 #include <clipp.h>
 #include <assimp/DefaultLogger.hpp>
 #include <plf_nanotimer.h>
-#include <Magnum/Trade/AbstractImporter.h>
-#include <Corrade/PluginManager/Manager.h>
-#include <MagnumPlugins/AnySceneImporter/AnySceneImporter.h>
-#include <Corrade/Utility/Directory.h>
+// #include <Magnum/Trade/AbstractImporter.h>
+// #include <Corrade/PluginManager/Manager.h>
+// #include <MagnumPlugins/AnySceneImporter/AnySceneImporter.h>
+// #include <Corrade/Utility/Directory.h>
 
 #ifndef ASSIMP_BUILD_NO_EXPORT
 #	include <assimp/Exporter.hpp>
@@ -104,20 +107,20 @@ bool DoConvertThingMagnum(const std::string &in,const std::string &filename){
     cout << "\tExport path: " << path << endl;
 	cout << "Format : "<<outext <<endl;
 
-	std::vector<std::string> pluginSearchPath = Corrade::PluginManager::AbstractPlugin::pluginSearchPaths();
-	std::cout<<"Relative search path is "<<Corrade::Utility::Directory::executableLocation()<<endl;
-	std::cout<<"Search folders: "<<endl;
-	for (auto s : pluginSearchPath){
-		std::cout<<s<<endl;
-	}
+	// std::vector<std::string> pluginSearchPath = Corrade::PluginManager::AbstractPlugin::pluginSearchPaths();
+	// std::cout<<"Relative search path is "<<Corrade::Utility::Directory::executableLocation()<<endl;
+	// std::cout<<"Search folders: "<<endl;
+	// for (auto s : pluginSearchPath){
+	// 	std::cout<<s<<endl;
+	// }
 
-	Corrade::PluginManager::Manager<Magnum::Trade::AbstractImporter> manager;
-    Corrade::Containers::Pointer<Magnum::Trade::AbstractImporter> importer =
-        manager.loadAndInstantiate("AssimpImporter");
-    if(!importer || !importer->openFile(in) ) {
-		cout << "Cannot load the AssImpImporter plugin"<<endl;
-		return false;
-	}	
+	// Corrade::PluginManager::Manager<Magnum::Trade::AbstractImporter> manager;
+    // Corrade::Containers::Pointer<Magnum::Trade::AbstractImporter> importer =
+    //     manager.loadAndInstantiate("AssimpImporter");
+    // if(!importer || !importer->openFile(in) ) {
+	// 	cout << "Cannot load the AssImpImporter plugin"<<endl;
+	// 	return false;
+	// }	
 
 }
 
@@ -135,11 +138,13 @@ bool DoConvertThing(const std::string &in,const std::string &filename){
     cout << "\tExport path: " << path << endl;
 	cout << "Format : "<<outext <<endl;
 	size_t outfi = GetMatchingFormat(outext);
-	printf("outfi = %d\n",outfi);
+	printf("outfi = %zu\n",outfi);
 	const aiExportFormatDesc* const e =  globalExporter->GetExportFormatDescription(outfi);
 	printf("assimp export: select file format: \'%s\' (%s)\n",e->id,e->description);
 	
 	ImportData import;
+	auto* imp = globalImporter->GetImporter("ifc");
+	printf("Current loader for ifc is %p\n",imp);
 	const aiScene* scene = ImportModel(import,in);
 	if (!scene) {
 		return false;
@@ -166,7 +171,7 @@ bool DoTheImportThing(const std::string &pFile)
 	// propably to request more postprocessing than we do in this example.
 	cout << "Importing IFC file " << pFile << endl;
 	// Create a logger instance 
-	Assimp::DefaultLogger::create("",Assimp::Logger::VERBOSE);
+	
 	// Now I am ready for logging my stuff
 	Assimp::DefaultLogger::get()->info("this is my info-call");
 
@@ -182,8 +187,7 @@ bool DoTheImportThing(const std::string &pFile)
 	{		
 		//DoTheErrorLogging(importer.GetErrorString());
 		cout << importer.GetErrorString() << endl;
-		// Kill it after the work is done
-		Assimp::DefaultLogger::kill();
+		// Kill it after the work is done	
 		return false;
 	}
 
@@ -194,8 +198,7 @@ bool DoTheImportThing(const std::string &pFile)
 	std::cout << "Timing import: " << results << " nanoseconds." << std::endl;
 	cout << "Import successful." << endl;
 	// We're done. Everything will be cleaned up by the importer destructor
-	// Kill it after the work is done
-	Assimp::DefaultLogger::kill();
+	// Kill it after the work is done	
 	std::cout<<"Finish import from assimp "<<endl;
 	return true;
 }
@@ -203,14 +206,21 @@ bool DoTheImportThing(const std::string &pFile)
 int main(int argc, char *argv[])
 {
 	using namespace clipp;
+	Assimp::DefaultLogger::create("",Assimp::Logger::VERBOSE);
 	bool rec = false, utf16 = false;
 	std::vector<int> tools;
 	string infile = "", fmt = "gltf";
 	string outfile = "";
 	// construct global importer and exporter instances
-	Assimp::Importer imp;
+	Assimp::Importer imp;	
 	imp.SetPropertyBool("GLOB_MEASURE_TIME",true);
+	auto* ifcLoader = new IfcAssImpImporter();
+	auto* oldIfcLoader = imp.GetImporter("ifc");
+	printf("REGISTERING NEW LOADER >>> %p \n",ifcLoader);
+	imp.UnregisterLoader(oldIfcLoader);
+	imp.RegisterLoader(ifcLoader);
 	globalImporter = &imp;
+	
 
 
 #ifndef ASSIMP_BUILD_NO_EXPORT
@@ -263,6 +273,8 @@ int main(int argc, char *argv[])
 			}
 		}
 	}
+	imp.UnregisterLoader(ifcLoader);
+	Assimp::DefaultLogger::kill();
 	cout << "Hello World BC." << endl;
 	return 0;
 }
