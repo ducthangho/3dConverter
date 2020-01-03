@@ -48,10 +48,10 @@ RM = /usr/bin/cmake -E remove -f
 EQUALS = =
 
 # The top-level source directory on which CMake was run.
-CMAKE_SOURCE_DIR = "/mnt/c/Users/mylaptop/Google Drive/3DConverter/3dConverter"
+CMAKE_SOURCE_DIR = "/mnt/c/Users/mylaptop/Google Drive/3DProjects"
 
 # The top-level build directory on which CMake was run.
-CMAKE_BINARY_DIR = "/mnt/c/Users/mylaptop/Google Drive/3DConverter/3dConverter"
+CMAKE_BINARY_DIR = "/mnt/c/Users/mylaptop/Google Drive/3DProjects"
 
 #=============================================================================
 # Targets provided globally by CMake.
@@ -80,9 +80,9 @@ edit_cache/fast: edit_cache
 
 # The main all target
 all: cmake_check_build_system
-	$(CMAKE_COMMAND) -E cmake_progress_start "/mnt/c/Users/mylaptop/Google Drive/3DConverter/3dConverter/CMakeFiles" "/mnt/c/Users/mylaptop/Google Drive/3DConverter/3dConverter/CMakeFiles/progress.marks"
+	$(CMAKE_COMMAND) -E cmake_progress_start "/mnt/c/Users/mylaptop/Google Drive/3DProjects/CMakeFiles" "/mnt/c/Users/mylaptop/Google Drive/3DProjects/CMakeFiles/progress.marks"
 	$(MAKE) -f CMakeFiles/Makefile2 all
-	$(CMAKE_COMMAND) -E cmake_progress_start "/mnt/c/Users/mylaptop/Google Drive/3DConverter/3dConverter/CMakeFiles" 0
+	$(CMAKE_COMMAND) -E cmake_progress_start "/mnt/c/Users/mylaptop/Google Drive/3DProjects/CMakeFiles" 0
 .PHONY : all
 
 # The main clean target
@@ -150,6 +150,87 @@ depend:
 	$(MAKE) -f CMakeFiles/3dConverter.dir/build.make CMakeFiles/3dConverter.dir/3dConverter.cpp.s
 .PHONY : 3dConverter.cpp.s
 
+Convert2AssImp.o: Convert2AssImp.cpp.o
+
+.PHONY : Convert2AssImp.o
+
+# target to build an object file
+Convert2AssImp.cpp.o:
+	$(MAKE) -f CMakeFiles/3dConverter.dir/build.make CMakeFiles/3dConverter.dir/Convert2AssImp.cpp.o
+.PHONY : Convert2AssImp.cpp.o
+
+Convert2AssImp.i: Convert2AssImp.cpp.i
+
+.PHONY : Convert2AssImp.i
+
+# target to preprocess a source file
+Convert2AssImp.cpp.i:
+	$(MAKE) -f CMakeFiles/3dConverter.dir/build.make CMakeFiles/3dConverter.dir/Convert2AssImp.cpp.i
+.PHONY : Convert2AssImp.cpp.i
+
+Convert2AssImp.s: Convert2AssImp.cpp.s
+
+.PHONY : Convert2AssImp.s
+
+# target to generate assembly for a file
+Convert2AssImp.cpp.s:
+	$(MAKE) -f CMakeFiles/3dConverter.dir/build.make CMakeFiles/3dConverter.dir/Convert2AssImp.cpp.s
+.PHONY : Convert2AssImp.cpp.s
+
+IfcAssImpImporter.o: IfcAssImpImporter.cpp.o
+
+.PHONY : IfcAssImpImporter.o
+
+# target to build an object file
+IfcAssImpImporter.cpp.o:
+	$(MAKE) -f CMakeFiles/3dConverter.dir/build.make CMakeFiles/3dConverter.dir/IfcAssImpImporter.cpp.o
+.PHONY : IfcAssImpImporter.cpp.o
+
+IfcAssImpImporter.i: IfcAssImpImporter.cpp.i
+
+.PHONY : IfcAssImpImporter.i
+
+# target to preprocess a source file
+IfcAssImpImporter.cpp.i:
+	$(MAKE) -f CMakeFiles/3dConverter.dir/build.make CMakeFiles/3dConverter.dir/IfcAssImpImporter.cpp.i
+.PHONY : IfcAssImpImporter.cpp.i
+
+IfcAssImpImporter.s: IfcAssImpImporter.cpp.s
+
+.PHONY : IfcAssImpImporter.s
+
+# target to generate assembly for a file
+IfcAssImpImporter.cpp.s:
+	$(MAKE) -f CMakeFiles/3dConverter.dir/build.make CMakeFiles/3dConverter.dir/IfcAssImpImporter.cpp.s
+.PHONY : IfcAssImpImporter.cpp.s
+
+assimpConverter.o: assimpConverter.cpp.o
+
+.PHONY : assimpConverter.o
+
+# target to build an object file
+assimpConverter.cpp.o:
+	$(MAKE) -f CMakeFiles/3dConverter.dir/build.make CMakeFiles/3dConverter.dir/assimpConverter.cpp.o
+.PHONY : assimpConverter.cpp.o
+
+assimpConverter.i: assimpConverter.cpp.i
+
+.PHONY : assimpConverter.i
+
+# target to preprocess a source file
+assimpConverter.cpp.i:
+	$(MAKE) -f CMakeFiles/3dConverter.dir/build.make CMakeFiles/3dConverter.dir/assimpConverter.cpp.i
+.PHONY : assimpConverter.cpp.i
+
+assimpConverter.s: assimpConverter.cpp.s
+
+.PHONY : assimpConverter.s
+
+# target to generate assembly for a file
+assimpConverter.cpp.s:
+	$(MAKE) -f CMakeFiles/3dConverter.dir/build.make CMakeFiles/3dConverter.dir/assimpConverter.cpp.s
+.PHONY : assimpConverter.cpp.s
+
 myIoStream.o: myIoStream.cpp.o
 
 .PHONY : myIoStream.o
@@ -189,6 +270,15 @@ help:
 	@echo "... 3dConverter.o"
 	@echo "... 3dConverter.i"
 	@echo "... 3dConverter.s"
+	@echo "... Convert2AssImp.o"
+	@echo "... Convert2AssImp.i"
+	@echo "... Convert2AssImp.s"
+	@echo "... IfcAssImpImporter.o"
+	@echo "... IfcAssImpImporter.i"
+	@echo "... IfcAssImpImporter.s"
+	@echo "... assimpConverter.o"
+	@echo "... assimpConverter.i"
+	@echo "... assimpConverter.s"
 	@echo "... myIoStream.o"
 	@echo "... myIoStream.i"
 	@echo "... myIoStream.s"

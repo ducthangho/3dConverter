@@ -46,31 +46,37 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 #ifndef AI_IFCASSIMPIMPORTER_H_INC
 #define AI_IFCASSIMPIMPORTER_H_INC
+#pragma once 
+
+#include "Convert2AssImp.h"
+#include <osg/Group>
+#include <osg/Geode>
+#include <osg/Material>
+#include <osg/Switch>
+#include <osg/MatrixTransform>
 
 #include <assimp/BaseImporter.h>
-#include <assimp/code/Importer/IFC/IFCUtil.h>
+// #include <assimp/code/Importer/IFC/IFCUtil.h>
 #include <ifcpp/reader/ReaderSTEP.h>
 #include "ifcpp/IFC4/include/IfcRepresentationItem.h"
 #include "ifcpp/IFC4/include/IfcSurfaceStyle.h"
 #include <ifcpp/geometry/Carve/GeometryConverter.h>
 #include <ifcpp/geometry/GeometrySettings.h>
 
-struct aiMesh;
-struct aiNode;
-struct aiBone;
-struct aiMaterial;
-struct aiMaterialProperty;
-struct aiNodeAnim;
-struct aiAnimation;
-struct aiTexture;
-struct aiLight;
-struct aiCamera;
+// struct aiMesh;
+// struct aiNode;
+// struct aiBone;
+// struct aiMaterial;
+// struct aiMaterialProperty;
+// struct aiNodeAnim;
+// struct aiAnimation;
+// struct aiTexture;
+// struct aiLight;
+// struct aiCamera;
 
-#ifndef ASSIMP_BUILD_NO_IFCASSIMPIMPORTER
 
 using namespace std;
-namespace Assimp    {
-
+using namespace Assimp;
 // ---------------------------------------------------------------------------------
 /** Importer class for 3D Studio r3 and r4 3DS files
  */
@@ -82,8 +88,12 @@ private:
 
 public:
 
-    IfcAssImpImporter():m_step_reader(new ReaderSTEP()), m_ifc_model(new BuildingModel()),geometry_converter(new GeometryConverter( m_ifc_model )) {
-
+    IfcAssImpImporter():m_step_reader(new ReaderSTEP()), m_ifc_model(new BuildingModel()),m_geometry_converter(new GeometryConverter( m_ifc_model )),m_rootnode(new osg::Group), m_sw_model(new osg::Switch),m_sw_coord_axes(new osg::Switch) {
+        m_rootnode->setName( "m_rootnode" );
+        m_sw_model->setName( "m_sw_model" );
+	    m_rootnode->addChild( m_sw_model.get() );
+        m_sw_coord_axes->setName( "m_sw_coord_axes" );
+	    m_rootnode->addChild( m_sw_coord_axes.get() );
     }
 
     virtual bool CanRead(
@@ -91,13 +101,17 @@ public:
         IOSystem* pIOHandler,
         bool checkSig
     ) const;
-    virtual const aiImporterDesc* GetInfo() const;
+    virtual const aiImporterDesc* GetInfo() const;    
     virtual void InternReadFile(
     const std::string& pFile,
         aiScene* pScene,
         IOSystem* pIOHandler
     );
-    void ReadHeader();
+    osg::Group*						getRootNode() { return m_rootnode; }
+	osg::Switch*					getModelNode() { return m_sw_model; }
+	osg::Switch*					getCoordinateAxesNode() { return m_sw_coord_axes; }
+	void setRootNode( osg::Group* root );
+    /*void ReadHeader();
     void ReadBinaryScene( IOStream * stream, aiScene* pScene );
     void ReadBinaryNode( IOStream * stream, aiNode** mRootNode, aiNode* parent );
     void ReadBinaryMesh( IOStream * stream, aiMesh* mesh );
@@ -108,8 +122,8 @@ public:
     void ReadBinaryAnim( IOStream * stream, aiAnimation* anim );
     void ReadBinaryTexture(IOStream * stream, aiTexture* tex);
     void ReadBinaryLight( IOStream * stream, aiLight* l );
-    void ReadBinaryCamera( IOStream * stream, aiCamera* cam );
-    shared_ptr<GeometryConverter>	getGeometryConverter()	{ return geometry_converter; }
+    void ReadBinaryCamera( IOStream * stream, aiCamera* cam );//*/
+    shared_ptr<GeometryConverter>	getGeometryConverter()	{ return m_geometry_converter; }
 
 protected:
 
@@ -129,29 +143,16 @@ private:
 
     shared_ptr<BuildingModel> m_ifc_model;
 	shared_ptr<ReaderSTEP> m_step_reader;
-    shared_ptr<GeometryConverter> geometry_converter;
+    shared_ptr<GeometryConverter> m_geometry_converter;
+    osg::ref_ptr<osg::Group>					m_rootnode;
+	osg::ref_ptr<osg::Switch>					m_sw_coord_axes;
+	osg::ref_ptr<osg::Switch>					m_sw_model;
+	osg::ref_ptr<osg::MatrixTransform>			m_transform_light;
+	osg::ref_ptr<osg::Material>					m_material_selected;
 public:
 
 
-    // loader settings, publicly accessible via their corresponding AI_CONFIG constants
-    struct Settings
-    {
-        Settings()
-            : skipSpaceRepresentations()
-            , useCustomTriangulation()
-            , skipAnnotations()
-            , conicSamplingAngle(10.f)
-			, cylindricalTessellation(32)
-        {}
-
-
-        bool skipSpaceRepresentations;
-        bool useCustomTriangulation;
-        bool skipAnnotations;
-        float conicSamplingAngle;
-		int cylindricalTessellation;
-    };
-
+    // loader settings, publicly accessible via their corresponding AI_CONFIG constants    
 
 private:
 
@@ -161,8 +162,6 @@ private:
 
 
 
-} // end of namespace Assimp
+// } // end of namespace Assimp
 
 #endif // !! ASSIMP_BUILD_NO_IFCASSIMPIMPORTER
-
-#endif // AI_IFCASSIMPIMPORTER_H_INC
